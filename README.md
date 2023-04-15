@@ -1,6 +1,6 @@
 # Manuel d'utilisation (INPF12)
 
-Le but de ce projet scolaire a été de créer un programme en Ocaml imitant le ruban de Turing. Ce programme peut : 
+Le but de ce projet scolaire a été de créer un programme en Ocaml imitant la Machine De Turing. Ce programme peut : 
 
 ### Lire une chaine d'instruction composé de : 
 - Write 
