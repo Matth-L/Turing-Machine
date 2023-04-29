@@ -155,8 +155,7 @@ let analyse_program file =
 type : couple de liste de char et un char
 @requires 2 liste et un char ('' ne compte pas comme un char)
 donc si '' -> ne compile pas
-@ensures
-@raises
+@ensures création d'un ruban
 *********************************************************)
 
 type ruban = Ruban of (char list * char * char list);;
@@ -186,11 +185,13 @@ fonction pushLastPosition :
 -> ajoute un élément à la fin d'une liste
 
 type : 'a -> 'a list -> 'a list
-@requires la liste doit être non vide
+@requires une liste et un élément
 @ensures une liste avec l'élément ajouté à la fin
-@raises Une erreur si on insère une liste vide
 *********************************************************)
-let pushLastPosition n list = List.fold_right (fun e acc -> e::acc) list [n];;
+let pushLastPosition n list = 
+  List.fold_right (fun e acc -> e::acc) 
+                  list 
+                  (n::[]);;
 
 (*********************************************************
 fonction listWithoutLastElement :
@@ -203,7 +204,7 @@ type : 'a list -> 'a list
 ************************************************************)
 let rec listWithoutLastElement list = 
   match list with
-  |[] -> failwith "La liste ne doit pas être vide"
+  |[] -> failwith "listWithoutLastElement : La liste ne doit pas être vide"
   |_::[] -> []
   |a::b -> a::(listWithoutLastElement b);;
 
@@ -245,7 +246,7 @@ liste de droite
 + ([a;b;c],d,[e;f;g]) -> ([a;b;c;d],e,[f;g]
 
 type : ruban -> ruban
-@requires le ruwrite test 'a';;ban doit être de type ruban
+@requires un ruban 
 @ensures un ruban modifié
 *********************************************************)
 let rightRuban ruban = 
@@ -263,7 +264,7 @@ de la liste gauche
 + ([a;b;c],d,[e;f;g]) -> ([a;b],c,[d;e;f;g])
 
 type : ruban -> ruban
-@requires le ruban doit être de type ruban
+@requires un ruban
 @ensures un ruban modifié
 *********************************************************)
 let leftRuban ruban = 
@@ -272,10 +273,10 @@ let leftRuban ruban =
   |Ruban(l1,head,l2) -> Ruban(listWithoutLastElement l1,lastElement l1,head::l2);;
 
 (*********************************************************
-Partie 1 de l'énoncé
 fonction runInstruction :
 -> exécute une instruction élémentaire ne nécessitant
 aucun parcours de program sur un ruban
+Version 1 de l'énoncé 
 
 type : instruction -> ruban -> ruban
 @requires il faut que l'instruction existe 
@@ -289,7 +290,6 @@ let runInstruction instruction ruban =
   |Left -> leftRuban ruban
   |_ -> failwith "runInstruction : Command"
   ;;
-
 
 (**************TEST DE LA FONCTION runInstruction*********
 
@@ -445,6 +445,15 @@ let _ = rubanToList (Ruban([],'a',['b';'c';'d']));;
 (*OK*)
 
 *************************************************************)
+
+(*************************************************************
+fonction fold_ruban :
+-> parcours le ruban de gauche à droite en effectuant un fold
+
+type : ('a -> char -> 'a) -> 'a -> ruban -> 'a
+@requires une fonction f, une valeur v0 et un ruban
+@ensures une valeur de type v0
+**************************************************************)
 let fold_ruban f v0 ruban = 
     let tape = rubanToList ruban in 
     List.fold_left (fun v_n newChar -> f v_n newChar) v0 tape
@@ -479,7 +488,7 @@ Les majuscules sont de 65 à 90
 Les minuscules sont de 97 à 122
 
 Cela aurait pu être fait avec des if comme demandé mais 
-ce n'est pas esthétique
+"when" est plus esthétique
 
 type : int -> char -> char
 @requires char doit être une lettre en ascii 
@@ -523,7 +532,8 @@ fonction deleteChar :
 -> remplace un char par ' ' (donc le supprime) 
 
 type : char -> char -> char
-@requires un char et un char
+@requires un char et un char(a supprimer)
+@ensures un char (le même si différent du char à supprimer)
 ************************************************************)
 let deleteChar c charInput = if (charInput=c) then ' ' else charInput ;;
 
@@ -533,6 +543,7 @@ fonction deleteCharInList :
 
 type : char -> char list -> char list
 @requires un char à supprimer et une liste de char
+@ensures une liste sans le char
 ***********************************************************)
 let deleteCharInList c list = 
   (*un fold left inverserais la liste*)
@@ -541,7 +552,8 @@ let deleteCharInList c list =
 
 (***********************************************************
 fonction deleteRuban :
--> supprime un character du ruban fonction
+-> supprime un character d'un ruban
+
 @requires un char et un ruban
 @ensures un ruban sans le char
 ************************************************************)
@@ -564,9 +576,10 @@ let invertRuban ruban =
 ;;
 
 (***********************************************************
-fonction runInstructionV2 :
+fonction runInstruction :
 -> exécute une instruction sur un ruban , 
     prend en compte caesar, delete, invert 
+Version 2
 
 type : instruction -> ruban -> ruban
 @requires une instruction et un ruban
@@ -584,6 +597,7 @@ let runInstruction instruction ruban =
   |_ -> failwith "runInstruction : Command not found " 
   ;;
 
+(*pas commenté car les mêmes que plus haut*)
 let rec runListInstruction program ruban = 
   match program with
     |[] -> ruban
@@ -679,7 +693,7 @@ charactere passé en paramètre
 ex : ['l';'l';'o';'l'] 'l' -> ['o';'l']
 type : 'a list -> 'a -> 'a list
 @requires une liste et un charactere (celui qu'on souhaite enlever)
-@ensures une liste sans charactere consécutif a char
+@ensures une liste sans charactere consécutif à "char"
 *************************************************************)
 let rec noDupOf1st l char =
   match l with
@@ -724,14 +738,13 @@ let rec encode l =
 
     let count = 2 + howMany (c) (a) in (*on compte le nombre de répétitions*)
 
-    (* on crée une liste ou tt les occurences de b qui se suivent sont enlevé*)
+    (* on crée une liste ou toutes les occurences de b qui se suivent sont enlevé*)
     (*a (ou b) contient l'élément à enlever on le met en début de liste*)
     let rest = noDupOf1st (c) (a) in 
     Repeat(count,[Write a; Right]) :: encode rest
 
   else 
     Write a:: Right :: encode (b::c)
-
   ;;
   
 (************************TEST ENCODE*************************
@@ -771,6 +784,9 @@ qu'il y a cou comme premier element de la 2e liste
 fonction subListOf :
 -> renvoie une sous liste de l de taille num
 
+type : 'a list -> int -> 'a list
+@requires une liste et un entier
+@ensures une liste de taille num
 *************************************************************)
 let rec subListOf num l = 
   match (num,l) with
@@ -880,12 +896,29 @@ let _ = listWithoutPattern ['c';'o';'u';'c';'o';'u';'c';'o';'u';'c';'o';'u';'l']
 let _ = listWithoutPattern ['a';'b'] ['a'] ;;
 ***************************************************************)
 
+(************************************************************
+fonction encodeChar :
+-> encode un char en une instruction
+
+type : char -> instruction
+@requires un char
+@ensures une instruction
+*************************************************************)
 let encodeChar c = Write c;;
 
+(************************************************************
+fonction listWithoutFirstElement :
+-> renvoie une liste sans le premier élément
+
+type : 'a list -> 'a list
+@requires une liste
+@ensures une liste sans le premier élément
+********************************************************)
 let listWithoutFirstElement l = match l with
 |[]->[]
 |a::b->b
 ;;
+
 (**************************************************************
 fonction finalEncode :
 -> renvoie une liste d'instruction pour encoder une liste de char
@@ -893,14 +926,13 @@ le plus efficacement possible
 
 le but de cette fonction est de regarder si un element est repété.
 Chaque element sera ajouté dans le pattern
-le pattern un accumulateur des lettres qui ne forme pas un pattern 
+le pattern est un accumulateur des lettres qui ne forme pas un pattern 
 avec le reste de la liste.
 Il sera testé avec les n premiers élements de la liste. 
 Si le pattern est trouvé on l'enlève de la liste autant de fois qu'il 
 apparait et on l'encode avec le nombre de fois qu'il apparait. 
 sinon on l'encode en enlevant les lettres doubles.
-Cette fonction ne traite pas les patterns avec plusieurs mots :
-ex : a a a a  ne rendra pas Repeat 4 a mais Write a Repeat 3 a
+
 type : 'char list -> instruction list
 @requires une liste de char
 @ensures une liste d'instruction pour encoder une liste de char
@@ -911,7 +943,6 @@ let finalEncode l =
     match listToEncode with
     (*si on arrive la , on a tous evaluer ou on a pas trouver de pattern*)
     |[] -> encode pattern 
-
     (*pattern trouvé , on encode ce qu'il reste en enlevant les lettres doubles*)
     |a::b ->( 
 
@@ -931,6 +962,7 @@ let finalEncode l =
     in
     testPattern l [] 
   ;;
+
 (************************TEST FINAL ENCODE*******************
 let _ = finalEncode [];;
 let _ = finalEncode ['a'];;
@@ -944,6 +976,7 @@ let _ = finalEncode ['o';'c';'c';'c';'c';'c';'c';'c';'c';'o']
 let _ = finalEncode ['c';'o';'c';'o';'c';'o'];;
 let _ = finalEncode ['c';'o';'l';'c';'o'];;
 let _ = finalEncode ['c';'o';'u';'c';'o';'u';'l';'l';'l';'u'];;
+let _ = finalEncode ['a';'b';'c';'a';'b';'c'];;
 ***************************************************************)
 
 let generate_program msg = finalEncode msg;;
