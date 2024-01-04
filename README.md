@@ -1,4 +1,4 @@
-# Manuel d'utilisation (INPF12)
+# Manuel d'utilisation
 
 Le but de ce projet scolaire a été de créer un programme en Ocaml imitant la Machine De Turing. Ce programme peut : 
 
